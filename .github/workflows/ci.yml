@@ -1,0 +1,108 @@
+name: GiftLink CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Backend Tests ─────────────────────────────────────────────────────────────
+  backend:
+    name: Backend – Install & Test
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ping: 1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: giftlink-backend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: giftlink-backend
+        run: npm install
+
+      - name: Run backend tests
+        working-directory: giftlink-backend
+        run: npm test
+        env:
+          MONGO_URL: mongodb://localhost:27017
+          JWT_SECRET: ci_test_secret_do_not_use_in_production
+          PORT: 3060
+          SENTIMENT_URL: http://localhost:3002
+
+  # ── Sentiment Service ─────────────────────────────────────────────────────────
+  sentiment:
+    name: Sentiment – Install & Verify
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install sentiment dependencies
+        working-directory: sentiment
+        run: npm install
+
+      - name: Verify sentiment entry file exists
+        run: test -f sentiment/index.js
+
+      - name: Smoke test – sentiment service starts
+        working-directory: sentiment
+        run: |
+          node index.js &
+          sleep 3
+          curl -sf -X POST http://localhost:3000/sentiment \
+            -H "Content-Type: application/json" \
+            -d '{"sentence":"This is wonderful"}' | grep sentiment
+          kill %1
+        env:
+          PORT: 3000
+
+  # ── Frontend Build ─────────────────────────────────────────────────────────────
+  frontend:
+    name: Frontend – Install & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: giftlink-frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: giftlink-frontend
+        run: npm install
+
+      - name: Build frontend
+        working-directory: giftlink-frontend
+        run: npm run build
+        env:
+          REACT_APP_BACKEND_URL: http://localhost:3060
+          CI: false   # Prevents treating ESLint warnings as build errors

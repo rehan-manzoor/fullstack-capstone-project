@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+
+  mongodb:
+    image: mongo:7
+    container_name: giftlink-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=giftdb
+
+  sentiment:
+    build: ./sentiment
+    container_name: giftlink-sentiment
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+
+  backend:
+    build: ./giftlink-backend
+    container_name: giftlink-backend
+    restart: unless-stopped
+    ports:
+      - "3060:3060"
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017/giftdb
+      - JWT_SECRET=${JWT_SECRET:-giftlink_secret_change_me}
+      - PORT=3060
+      - SENTIMENT_URL=http://sentiment:3000
+    depends_on:
+      - mongodb
+      - sentiment
+
+  frontend:
+    build:
+      context: ./giftlink-frontend
+      args:
+        REACT_APP_BACKEND_URL: http://localhost:3060
+    container_name: giftlink-frontend
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:

@@ -1,0 +1,14 @@
+.filter-section {
+    background-color: #f8f9fa;
+    border-color: #dee2e6 !important;
+}
+
+.filter-section h5 {
+    color: #0056b3;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.form-range::-webkit-slider-thumb {
+    background-color: #0056b3;
+}
