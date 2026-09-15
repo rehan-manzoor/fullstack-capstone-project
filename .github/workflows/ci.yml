@@ -7,7 +7,6 @@ on:
     branches: [main]
 
 jobs:
-  # ── Backend Tests ─────────────────────────────────────────────────────────────
   backend:
     name: Backend – Install & Test
     runs-on: ubuntu-latest
@@ -38,7 +37,7 @@ jobs:
         working-directory: giftlink-backend
         run: npm install
 
-              - name: Import MongoDB gift data
+      - name: Import MongoDB gift data
         working-directory: giftlink-backend
         run: node util/import-mongo/index.js
         env:
@@ -53,7 +52,6 @@ jobs:
           PORT: 3060
           SENTIMENT_URL: http://localhost:3002
 
-  # ── Sentiment Service ─────────────────────────────────────────────────────────
   sentiment:
     name: Sentiment – Install & Verify
     runs-on: ubuntu-latest
@@ -86,7 +84,6 @@ jobs:
         env:
           PORT: 3000
 
-  # ── Frontend Build ─────────────────────────────────────────────────────────────
   frontend:
     name: Frontend – Install & Build
     runs-on: ubuntu-latest
@@ -111,4 +108,4 @@ jobs:
         run: npm run build
         env:
           REACT_APP_BACKEND_URL: http://localhost:3060
-          CI: false   # Prevents treating ESLint warnings as build errors
+          CI: false
