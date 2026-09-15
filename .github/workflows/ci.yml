@@ -38,6 +38,12 @@ jobs:
         working-directory: giftlink-backend
         run: npm install
 
+              - name: Import MongoDB gift data
+        working-directory: giftlink-backend
+        run: node util/import-mongo/index.js
+        env:
+          MONGO_URL: mongodb://localhost:27017
+
       - name: Run backend tests
         working-directory: giftlink-backend
         run: npm test
