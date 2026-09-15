@@ -76,11 +76,12 @@ jobs:
         working-directory: sentiment
         run: |
           node index.js &
+          SERVER_PID=$!
           sleep 3
           curl -sf -X POST http://localhost:3000/sentiment \
             -H "Content-Type: application/json" \
             -d '{"sentence":"This is wonderful"}' | grep sentiment
-          kill %1
+          kill $SERVER_PID
         env:
           PORT: 3000
 
