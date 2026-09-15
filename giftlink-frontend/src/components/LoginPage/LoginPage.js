@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { urlConfig } from '../../config';
 import { useAppContext } from '../../context/AuthContext';
 
+
 function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -10,6 +11,7 @@ function LoginPage() {
     const [loading, setLoading] = useState(false);
     const { setIsLoggedIn, setUserName } = useAppContext();
     const navigate = useNavigate();
+    const bearerToken = sessionStorage.getItem('auth-token');
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -18,11 +20,13 @@ function LoginPage() {
 
         try {
             const response = await fetch(`${urlConfig.backendUrl}/api/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
-            });
-
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': bearerToken ? `Bearer ${bearerToken}` : '',
+    },
+    body: JSON.stringify({ email, password }),
+});
             const data = await response.json();
 
             if (!response.ok) {
